@@ -91,6 +91,7 @@ void CadastrarProdutos() {
     int opcao;
 
 //RECEBE DADOS DO TECLADO
+    system("cls");
     printf("\nCADASTRO DE PRODUTOS\n");
     printf("\nDescrição do Produto: ");
     fflush(stdin);
@@ -150,6 +151,7 @@ void CadastrarProdutos() {
     default:
         printf("\nOpção inválida! ");
     }
+    system("pause");
 }
 //FimCadastrarProdutos
 
@@ -162,6 +164,7 @@ void ConsultarProdutoDescricao() {
     char pesquisaProduto[20];
     int achou=0;
 
+    system("cls");
     printf("\nPesquisar produto por descrição: \t");
     fflush(stdin);
     gets(pesquisaProduto);
@@ -182,6 +185,7 @@ void ConsultarProdutoDescricao() {
     if(!achou) {
         printf("\nProduto NÃO encontrado! ");
     }
+    system("pause");
 }
 //FimConsultarProdutoPorPalavraChave
 void listarCadastro() {
@@ -193,6 +197,8 @@ void listarCadastro() {
         printf("Erro na abertura do arquivo!\n");
         exit(1);
     }
+    system("cls");
+    printf("CADASTRO DE PRODUTOS\n");
     while (fread(&produto,sizeof(produto),1,fpprodutos) == 1) {
         printf("\n");
         printf("\nCódigo: %i ", produto.codigo);
@@ -204,6 +210,7 @@ void listarCadastro() {
         printf("\n");
     }
     fclose(fpprodutos);
+    system("pause");
 }
 //(3)1.2-RELATAR PRODUTOS COM ESTOQUE MÍNIMO
 void estoqueMinimo() {
@@ -214,6 +221,8 @@ void estoqueMinimo() {
         printf("Erro na abertura do arquivo!\n");
         exit(1);
     }
+    system("cls");
+    printf("PRODUTOS COM ESTOQUE MÍNIMO\n");
     while (fread(&produto,sizeof(produto),1,fpprodutos) == 1) {
         if(produto.estoque < produto.estoqueMinimo) {
             printf("\n %i - %s - Estoque Mínimo %i - Estoque Atual ",
@@ -221,15 +230,18 @@ void estoqueMinimo() {
         }
     }
     fclose(fpprodutos);
+    system("pause");
 }
 //FimRelatarProdutosComEstoqueMinimo
 
 //(4)2-CADASTRAR CLIENTES
 void CadastrarClientes(){
+    setlocale(LC_ALL,"Portuguese");
     FILE *fpclientes;
     struct Cliente cliente;
     int opcao;
 //RECEBE DADOS DO CLIENTE (TECLADO)
+    system("cls");
     printf("\nCADASTRO DE CLIENTES\n");
     printf("\nNome: ");
     fflush(stdin);
@@ -286,11 +298,39 @@ void CadastrarClientes(){
     default:
         printf("\nOpção inválida! ");
     }//fim switch
+    system("pause");
 }
 //FimCadastrarClientes
 
+//LISTA COMPLETA DE CLIENTES
+void listarClientes(){
+    setlocale(LC_ALL,"Portuguese");
+    FILE *fpclientes;
+    struct Cliente cliente;
+
+    fpclientes = fopen(CADCLIENTE, "rb");
+    if (fpclientes == NULL) {
+        printf("Erro na abertura do arquivo!\n");
+        exit(1);
+    }
+    system("cls");
+    printf("\n\tCADASTRO DE CLIENTES\n");
+    while (fread(&cliente,sizeof(cliente),1,fpclientes) == 1) {
+
+        printf("\nCódigo: %i", cliente.codigo);
+        printf(" - Cliente: %s", cliente.nome);
+        printf("\nTelefone: %s - ", cliente.telefone);
+        printf("Endereço: %s ", cliente.endereco);
+        printf("E-mail: %s \n", cliente.email);
+    }
+    fclose(fpclientes);
+    system("pause");
+}
+//Fim lista completa de clientes.
+
 //(5)2.1-CONSULTAR CLIENTE POR PARTE INICIAL DO NOME
-/*void consultarCliente(){
+void consultarCliente(){
+    system("cls");
     setlocale(LC_ALL,"Portuguese");
     FILE *fpclientes;
     struct Cliente cliente;
@@ -308,20 +348,23 @@ void CadastrarClientes(){
             exit(1);
         }//verificação
     while(fread(&cliente,sizeof(cliente),1,fpclientes) == 1) {
-        if(strncmp(comparaNome,cliente.nome,sizeof(comparaNome)) == 0){
+        if(strncmp(comparaNome,cliente.nome,strlen(comparaNome)) == 0){
             encontrado++;
             printf("\nCódigo: %i", cliente.codigo);
             printf(" - Cliente: %s", cliente.nome);
             printf("\nTelefone: %s - ", cliente.telefone);
             printf("Endereço: %s ", cliente.endereco);
-            printf("E-mail: %s \n\n", cliente.email);
+            printf("E-mail: %s \n", cliente.email);
         }
     }//fim while
     if (!encontrado){
-        printf("Nome NÃO cadastrado");
+        printf("\t****");
+        printf("\n\tNome NÃO cadastrado!\n");
+        printf("\t****");
     }
     fclose(fpclientes);
-}*/
+    system("pause");
+}
 //FimConsultarClientePorParteInicialDoNome
 
 //(6)3-VENDER
@@ -343,7 +386,9 @@ void main() {
     setlocale(LC_ALL,"Portuguese");
 
     int opcao;
+
     do {
+        system("cls");
         printf("\nLOJA DE ELETROELETRONICOS\n");
         printf("\n 0 - Sair. ");
         printf("\n 1 - Cadastrar Produtos.");
@@ -352,6 +397,7 @@ void main() {
         printf("\n      13 - Listar Cadastro.");
         printf("\n 2 - Cadastrar Clientes.");
         printf("\n      21 - Consultar cliente pelo PRIMEIRO NOME.");
+        printf("\n      22 - Listar Clientes.");
         printf("\n");
         scanf("%i",&opcao);
         switch (opcao) {
@@ -376,10 +422,13 @@ void main() {
         case 21:
             consultarCliente();
             break;
+        case 22:
+            listarClientes();
+            break;
 
         default :
             printf("Opção Inválida!");
         }//FimSwitch
     } while (opcao != 0);
-
+    system("pause");
 }
