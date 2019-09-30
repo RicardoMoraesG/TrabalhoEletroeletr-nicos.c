@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <locale.h>
 #include <string.h>
+#include <time.h>
 #define CADPRODUTO "produtos.dat"
 #define CADCLIENTE "clientes.dat"
 #define CADVENDA "vendas.dat"
@@ -33,71 +34,41 @@ struct reg_vendas{
     float desc;
     float preco_prod;
     char descricao_prod[50];
-
+    int diaVenda, mesVenda, anoVenda;
 };
-int codigoProduto() {
-    //Automatiza a atribuição de códigos para o cadastro de produtos
-    FILE *fpprodutos;
-    struct Produto produto;
+int gera_codigo(char* arquivo) {
+    //atribui um código automático em sequência
     int codigo;
-    int resposta;
-    int incrementaCodigo=0;
-
-    fpprodutos = fopen(CADPRODUTO, "rb");
-    if (fpprodutos == NULL) {
-
-        printf("É o primeiro cadastro?! \n");
-        printf("1 - Sim!\n");
-        printf("0 - Não!\n");
-        scanf("%i", &resposta);
-        if(resposta) {
-            codigo = 1;
-            incrementaCodigo = 1;
-        } else {
-            printf("Erro na abertura ou arquivo ainda não existe!\n");
-            system("pause");
-        }
-    } else {
-        while (fread(&produto,sizeof(produto),1,fpprodutos) == 1) {
-            incrementaCodigo++;//conta quantos cadastros de produto existem.
-        }//Fim while.
-        fclose(fpprodutos);
-
-        codigo = incrementaCodigo+1; //acrescenta o novo na contagem.
+    int sequenciaCodigo = 0;
+    FILE* fp = fopen(arquivo, "rb");
+    if (fp == NULL) {
+        printf("(Arquivo vazio)\n");
+        codigo = 0;
+        sequenciaCodigo+1;
     }
-    return codigo;
-}
-int codigoCliente() {
-    //Automatiza a atribuição de códigos para o cadastro de produtos
-    FILE *fpcliente;
-    struct Cliente cliente;
-    int codigo;
-    int resposta;
-    int incrementaCodigo=0;
-
-    fpcliente = fopen(CADCLIENTE, "rb");
-    if (fpcliente == NULL) {
-
-        printf("É o primeiro cadastro?! \n");
-        printf("1 - Sim!\n");
-        printf("0 - Não!\n");
-        scanf("%i", &resposta);
-        if(resposta) {
-            codigo = 1;
-            incrementaCodigo = 1;
-        } else {
-            printf("Erro na abertura ou arquivo ainda não existe!!\n");
-            system("pause");
+    if (strncmp(CADPRODUTO, arquivo, strlen(CADPRODUTO)) == 0 ){
+        struct Produto estrutura;
+        //conta quantos cadastrados existem.
+        while (fread(&estrutura,sizeof(estrutura),1,fp) == 1) {
+            sequenciaCodigo++;
         }
-    } else {
-        while (fread(&cliente,sizeof(cliente),1,fpcliente) == 1) {
-            incrementaCodigo++;//conta quantos clientes cadastrados existem.
-        }//Fim while.
-        fclose(fpcliente);
-
-        codigo = incrementaCodigo+1; //acrescenta o novo na contagem.
     }
+    if (strncmp( CADCLIENTE, arquivo, strlen(CADCLIENTE)) == 0){
+        struct Cliente estrutura;
+        while (fread(&estrutura,sizeof(estrutura),1,fp) == 1) {
+            sequenciaCodigo++;
+        }
+    }
+    if (strncmp( CADVENDA, arquivo, strlen(CADVENDA)) == 0);{
+        struct reg_vendas estrutura;
+        while (fread(&estrutura,sizeof(estrutura),1,fp) == 1) {
+            sequenciaCodigo++;
+        }
+    }
+    fclose(fp);
+    codigo = sequenciaCodigo+1; //acrescenta o novo na contagem.
     return codigo;
+    system("pause");
 }
 //(1)1-CADASTRAR PRODUTOS
 void CadastrarProdutos() {
@@ -106,36 +77,22 @@ void CadastrarProdutos() {
     FILE *fpprodutos;
     struct Produto produto;
     int opcao;
-
-//RECEBE DADOS DO TECLADO
     system("cls");
     printf("\nCADASTRO DE PRODUTOS\n");
     printf("\nDescrição do Produto: ");
     fflush(stdin);
     gets(produto.descricao);
-
     printf("\nQuantidade em Estoque: ");
     fflush(stdin);
     scanf("%i", &produto.estoque);
-
     printf("\nQuantidade Mínima para o estoque: ");
     fflush(stdin);
     scanf("%i", &produto.estoqueMinimo);
-
     printf("\nPreço: ");
     fflush(stdin);
     scanf("%f", &produto.preco);
-
-    //receber o código via teclado:
-    /*
-    printf("\nCódigo Produto: ");
-    fflush(stdin);
-    scanf("%i", &produto.codigo);
-    */
-
-    //Automatiza a atribuição de código:
-    produto.codigo = codigoProduto();
-
+    //automatiza a atribuição de código (em sequencia)
+    produto.codigo = gera_codigo(CADPRODUTO);
     printf("\nConfirma Cadastro?");
     printf("\n0 - NÃO");
     printf("\n1 - SIM\n");
@@ -160,7 +117,6 @@ void CadastrarProdutos() {
         fclose(fpprodutos);
         break;
     }//Fim case 1
-
     case 0 :
         printf("Cadastro Cancelado! ");
         //retornar para o main.
@@ -171,7 +127,6 @@ void CadastrarProdutos() {
     system("pause");
 }
 //FimCadastrarProdutos
-
 //(2)1.1-CONSULTAR PRODUTO POR PALAVRA CHAVE NA DESCRIÇÃO DO PRODUTO
 void ConsultarProdutoDescricao() {
     setlocale(LC_ALL,"Portuguese");
@@ -197,9 +152,9 @@ void ConsultarProdutoDescricao() {
         if(strstr(produto.descricao, pesquisaProduto) != NULL){
             achou = 1;
             printf("\n%s, %i, Estoque %i, Estoque mínimo %i, R$ %.2f", produto.descricao, produto.codigo, produto.estoque, produto.estoqueMinimo, produto.preco);
-        }//FimIf.
+        }
 
-    }//FimWhile
+    }
     fclose(fpprodutos);
 
     if(!achou) {
@@ -261,37 +216,31 @@ void estoqueMinimo() {
     system("pause");
 }
 //FimRelatarProdutosComEstoqueMinimo
-
 //(4)2-CADASTRAR CLIENTES
 void CadastrarClientes(){
     setlocale(LC_ALL,"Portuguese");
     FILE *fpclientes;
     struct Cliente cliente;
     int opcao;
-//RECEBE DADOS DO CLIENTE (TECLADO)
     system("cls");
     printf("\nCADASTRO DE CLIENTES\n");
     printf("\nNome: ");
     fflush(stdin);
     gets(cliente.nome);
-
     printf("\nEndereço: ");
     fflush(stdin);
     gets(cliente.endereco);
-
     printf("\nTelefone: ");
     fflush(stdin);
     gets(cliente.telefone);
-
     printf("\nE-mail: ");
     fflush(stdin);
     gets(cliente.email);
-
     printf("\nData de Nascimento: ");
     fflush(stdin);
     gets(cliente.dataDeNascimento);
-     //Automatiza a atribuição de código:
-    cliente.codigo = codigoCliente();
+    //automatiza a atribuição de código (em sequencia)
+    cliente.codigo = gera_codigo(CADCLIENTE);
     printf("\nConfirma Cadastro?");
     printf("\n0 - NÃO");
     printf("\n1 - SIM\n");
@@ -317,8 +266,7 @@ void CadastrarClientes(){
         //FECHA O ARQUIVO clientes.dat
         fclose(fpclientes);
         break;
-    }//Fim case 1
-
+    }
     case 0 :
         printf("Cadastro Cancelado! ");
         //retornar para o main.
@@ -329,7 +277,6 @@ void CadastrarClientes(){
     system("pause");
 }
 //FimCadastrarClientes
-
 //LISTA COMPLETA DE CLIENTES
 void listarClientes(){
     setlocale(LC_ALL,"Portuguese");
@@ -356,7 +303,6 @@ void listarClientes(){
     system("pause");
 }
 //Fim lista completa de clientes.
-
 //(5)2.1-CONSULTAR CLIENTE POR PARTE INICIAL DO NOME
 void consultarCliente(){
     system("cls");
@@ -370,7 +316,6 @@ void consultarCliente(){
     printf("\nDigite o PRIMEIRO nome do cliente:\t");
     fflush(stdin);
     gets(comparaNome);
-
     fpclientes = fopen(CADCLIENTE, "rb");
         if (fpclientes == NULL) {
             printf("Erro na abertura ou arquivo ainda não existe!!\n");
@@ -388,27 +333,22 @@ void consultarCliente(){
         }
     }//fim while
     if (!encontrado){
-        printf("\t****");
-        printf("\n\tNome NÃO cadastrado!\n");
-        printf("\t****");
+        printf("\n\n\tNome NÃO cadastrado!\n\n");
     }
     fclose(fpclientes);
     printf("\n");
     system("pause");
 }
 //FimConsultarClientePorParteInicialDoNome
-
 //(6)3-VENDER
 void rvendas(){
     FILE *fpprodutos, *fpclientes, *fpvendas;
     struct Produto produto;
     struct Cliente cliente;
     struct reg_vendas venda;
-
     int codprod, codcli, codvendas, achou, continuar;
-    int opc;
+    char opc;
     float total,subtotal;
-
     //LOCALIZAR CLIENTE
     printf("\nDigite o codigo do Cliente: ");
     fflush(stdin); scanf("%i",&codcli);
@@ -421,37 +361,41 @@ void rvendas(){
         }
     }
     if(!achou){
-        printf("\n cliente nao localizado!");
+        printf("\n cliente não localizado!");
+        system("pause");
         return;
     }
     fclose(fpclientes);
     //se achou:
-    printf("\n Confirma Cliente? \n\t 1 - SIM \n\t 0 - NÃO\n\t");
-    fflush(stdin); scanf("%i",&opc);
-    if (opc == 0){
-        printf("\nOperancao Cancelada");
+    printf("\n Confirma Cliente? (S/N)");
+    fflush(stdin); scanf("%c",&opc);
+    if ((opc=='s')||(opc=='S')){
+        continuar = 1;
+    }
+    else{
+        continuar = 0;
+        printf("\nOperanção Cancelada\n");
+        system("pause");
         return;
     }
-    //se confirmar cliente:
-    printf("\nDigite o codigo da venda");
-    fflush(stdin); scanf("%i",&codvendas);
     //DIGITAR PRODUTOS
     do {
         printf("\nDigite o código do produto: ");
         fflush(stdin); scanf("%i",&codprod);
         //abre o arquivo de produtos
         fpprodutos = fopen(CADPRODUTO,"rb");
-            if (fpprodutos == NULL){printf("Erro na abertura ou arquivo ainda não existe!!\n");}
-        achou = 0;
-        while ((!achou)&&(fread(&produto,sizeof(produto),1,fpprodutos) == 1)){
-            if (produto.codigo == codprod){
-                printf("\nDescricao: %s",produto.descricao);
-                    strcpy(venda.descricao_prod, produto.descricao);
-                printf("\n Preco : %.2f",produto.preco);
-                    venda.preco_prod = produto.preco;
-                achou = 1;
-            }//fim if
-        }//fim while
+            if (fpprodutos == NULL){printf("Erro na abertura ou arquivo ainda não existe!!\n");system("pause");}
+            achou = 0;
+            //copia os dados do arquivo de produtos
+            while ((!achou)&&(fread(&produto,sizeof(produto),1,fpprodutos) == 1)){
+                if (produto.codigo == codprod){
+                    printf("\nDescricao: %s",produto.descricao);
+                        strcpy(venda.descricao_prod, produto.descricao);
+                    printf("\n Preco : %.2f",produto.preco);
+                        venda.preco_prod = produto.preco;
+                    achou = 1;
+                }
+            }
         fclose(fpprodutos);//fecha arquivo de produtos
         if (!achou){
             printf("\nProduto nao localizado");
@@ -459,61 +403,81 @@ void rvendas(){
         else{
             printf("\tquantidade : ");
             fflush(stdin); scanf("%i",&venda.qtde);
-            printf("\nDigite o desconto : ");
+            printf("\nDigite o desconto R$: ");
             fflush(stdin); scanf("%f",&venda.desc);
-            venda.cod_venda = codvendas;
-            venda.cod_cliente = codcli;
-            venda.cod_prod = codprod;
             //gravar a venda
-            printf("\n Confirmar a venda do produto (S/N)?");
+            continuar = 0;
+            printf("\n Confirmar a venda do produto (S/N)?\t");
             fflush(stdin); scanf("%c",&opc);
-            if((opc=='s')||(opc=='S')){
+            if ((opc=='s')||(opc=='S')){
+                continuar = 1;
+                //abre o arquivo de vendas para gravar
                 fpvendas = fopen(CADVENDA,"ab");
+                //copia os codigos para o arquivo de vendas
+                venda.cod_cliente = codcli;
+                venda.cod_prod = codprod;
+                venda.cod_venda = gera_codigo(CADVENDA);//automatiza a atribuição de código (em sequência)
+                codvendas = venda.cod_venda;
+                /*recebe uma data aleatória para testar os arquivos*/
+                venda.anoVenda = rand()% 3 + 2017;
+                venda.mesVenda = rand()% 12;
+                if(venda.mesVenda == 0) {
+                    venda.mesVenda++;
+                }
+                venda.diaVenda = rand()% 31;
+                if(venda.diaVenda == 0) {
+                    venda.diaVenda++;
+                }
+                /**/
+                //registra e fecha o arquivo de vendas para gravar
                 fwrite(&venda,sizeof(venda),1,fpvendas);
                 fclose(fpvendas);
                 printf("\nItem vendido com sucesso");
             }
             else{
+                continuar = 0;
                 printf("\nItem nao confirmado");
             }
         }
-        //Mais vendas
-
-        printf("\nDeseja incluir mais vendas? \n\t 1 - SIM \n\t 0 - NÃO\n\t");
-        fflush(stdin); scanf("%i",&continuar);
-        /*//if ((opc=='s')||(opc=='S')){//**TESTEANDO SE O ERRO ESTÁ AQUI**
+        //Mais vendas?
+        continuar = 0;
+        printf("\nDeseja incluir mais vendas? (S/N)?\t");
+        fflush(stdin); scanf("%c",&opc);
+        if ((opc=='s')||(opc=='S')){
             continuar = 1;
         }
         else{
             continuar = 0;
-        }*/
-    }while (continuar);
-
-//Finalizar vendas
-printf("\n venda ");
-printf("\n Pedido numero : %i",codvendas);
-printf("\n cliente %i - %s",cliente.codigo,cliente.nome);
-printf("\nCodigo Descrição                  Preco  Qtde  Desconto Total");
-fpvendas = fopen(CADVENDA,"rb");
-total = 0;
-while (fread(&venda,sizeof(venda),1,fpvendas)==1){
-    if (venda.cod_venda == codvendas){
-        fpprodutos = fopen(CADPRODUTO,"rb");
-        achou = 0;
-        while ((!achou)&&(fread(&produto,sizeof(produto),1,fpprodutos)==1)){
-            if (produto.codigo == venda.cod_prod){
-                achou = 1;
-            }
         }
+    }while (continuar);
+    //Finalizar vendas
+    fpvendas = fopen(CADVENDA,"rb");
+    printf("\n \tVENDA ");
+    printf("\nPedido número: %i",venda.cod_venda);
+    printf("\nCliente %i - %s",cliente.codigo, cliente.nome);
+
+    //mostar os itens vendidos para o cliente
+    printf("\nCódigo Descrição                  Preco  Qtde  Desconto Total");
+    total = 0;
+    while ( fread(&venda,sizeof(venda),1,fpvendas) == 1 ) {                         //le cada registro de venda
+        if (venda.cod_venda == codvendas) {                                         //se o codigo do registro é o pesquisado:
+            fpprodutos = fopen(CADPRODUTO,"rb");                                    //abre o cadastro de produtos
+            achou = 0;                                                              //zera o 'achou'
+            while ((!achou)&&(fread(&produto,sizeof(produto),1,fpprodutos) == 1) ){//enquanto (nao 'achou') e (ler um registro de produto)
+                if (produto.codigo == venda.cod_prod){//se o (codigo do produto) for o do registro de venda
+                    subtotal = (produto.preco * venda.qtde) - venda.desc;           //preco * quantidade - desconto.
+                    total = total + subtotal;
+                    printf("\n%6i %-25s %5.2f %4i %8.2f %.2f",venda.cod_prod,produto.descricao,produto.preco,venda.qtde,venda.desc,subtotal);achou = 1;
+                }
+            }
         fclose(fpprodutos);
-        subtotal = (produto.preco * venda.qtde) - venda.desc;
-        total = total + subtotal;
-        printf("\n%6i %-25s %5.2f %4i %8.2f %.2f",venda.cod_prod,produto.descricao,produto.preco,venda.qtde,venda.desc,subtotal);
+        }
     }
-}
-printf("\n\n TOTAL = %.2f\n",total);
-printf("\n");
-system("pause");
+    printf("\n\n TOTAL = %.2f\n",total);
+
+    fclose(fpvendas);
+    printf("\n");
+    system("pause");
 }
 //FimVender
 
@@ -564,6 +528,7 @@ void clientesPorProduto(){
     struct Cliente cliente;
     int pesquisa_produto, achou = 0;
     char nome_cliente[30];
+    int dataVenda;
 
     system("cls");
     printf("\nCONSULTA DE CLIENTES QUE COMPRARAM UM PRODUTO");
@@ -593,8 +558,9 @@ void clientesPorProduto(){
                 }
             }
         }
-        else
-            printf("\n\tNão foram registradas vendas para este produto\n");
+        else{
+            printf("\n\tNão foram registradas vendas para este produto\n");}
+
         fclose(fpvenda);//fecha o arquivo de vendas
     printf("\n");
     system("pause");
@@ -602,10 +568,40 @@ void clientesPorProduto(){
 //FimClientesQueCompraramUmProduto
 
 //(9)3.3-RELATAR PRODUTOS VENDIDOS EM UM DETERMINADO MES
+void vendaMensal(){
+    FILE *fpvenda;
+    struct reg_vendas vendas;
+    int pesquisa_mes, achou = 0;
+    system("cls");
+    printf("\nRELATÓRIO DE VENDAS MENSAIS");
+    printf("\nMês para consulta:\t ");
+    fflush(stdin); scanf("%i", &pesquisa_mes);
+    //abre os arquivos de venda
+        fpvenda = fopen(CADVENDA, "rb");
+        while ((!achou) && (fread(&vendas, sizeof(vendas), 1, fpvenda) == 1) ){
+            if (vendas.mesVenda == pesquisa_mes){
+                achou = 1;
+            }
+        }
+        if (achou){
+            printf("Venda Produto\t\t\t\t  Cód\tPreço R$\tDesconto\tUn.\n");//titulo da listagem do cliente
+            while ( (fread(&vendas, sizeof(vendas), 1, fpvenda) == 1) ) {
+                if (vendas.mesVenda == pesquisa_mes) {//lê cada registro de cliente
+                    printf("%4i   %-30s \t %4i\tR$ %5.2f\tR$ %5.2f\t%3i \n", vendas.cod_venda, vendas.descricao_prod, vendas.cod_prod, vendas.preco_prod,vendas.desc,vendas.qtde);
+                }
+            }
+        }
+        else
+            printf("\n\tNão foram registradas vendas neste mês\n");
+        fclose(fpvenda);//fecha o arquivo de vendas
+    printf("\n");
+    system("pause");
+}
 
 //FimRelatarProdutosVendidosPorUmMes
 
 //(10)3.4-RELATAR PRODUTO CAMPEÃO DE VENDAS EM UM ANO
+
 //FimRelatarProdutoCampeaoDeVendasEmUmAno
 
 void main() {
@@ -624,9 +620,10 @@ void main() {
         printf("\n 2 - Cadastrar Clientes.");
         printf("\n      21 - Consultar cliente pelo PRIMEIRO NOME.");
         printf("\n      22 - Listar Clientes.");
-        printf("\n 4 -  Realizar venda ");
-        printf("\n      41 - Relatório de vendas por cliente.");
-        printf("\n      42 - Relatório de clientes que compraram um produto.");
+        printf("\n 3 -  Realizar venda ");
+        printf("\n      31 - Relatório de vendas por cliente.");
+        printf("\n      32 - Relatório de clientes que compraram um produto.");
+        printf("\n      33 - Relatório vendas mensal.");
         printf("\n");
         scanf("%i",&opcao);
         switch (opcao) {
@@ -654,19 +651,22 @@ void main() {
         case 22:
             listarClientes();
             break;
-        case 4 :
+        case 3 :
             rvendas();
             break;
-        case 41:
+        case 31:
             vendasPorCliente();
             break;
-        case 42:
+        case 32:
             clientesPorProduto();
+            break;
+        case 33:
+            vendaMensal();
             break;
         default :
             printf("Opção Inválida!\n");
             system("pause");
-        }//FimSwitch
+        }
     } while (opcao != 0);
     system("pause");
 }
